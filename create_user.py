@@ -22,7 +22,7 @@ collection.create_index('username', unique=True)
 
 try:
     collection.insert_one(
-        {'username': args.user}, {'password': args.password}
+        {'username': args.user, 'password': args.password}
     )
 except pymongo.errors.DuplicateKeyError:
     sys.exit('Username exists! Try to choose another.')
