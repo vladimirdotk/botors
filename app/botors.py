@@ -8,9 +8,9 @@ mongo = PyMongo(app)
 
 
 @app.route('/', methods=['GET'])
-def hello_world():
+def test_func():
     notes = mongo.db.notes.find_one()
-    return jsonify(notes)
+    return jsonify(notes) if notes else jsonify({})
 
 
 if __name__ == '__main__':
