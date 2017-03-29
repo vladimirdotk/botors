@@ -1,0 +1,8 @@
+.idea/
+__pycache__/
+venv/
+config.py
+local-tests.py
+.vscode/
+mongo/data/
+!/mongo/data/.gitignore

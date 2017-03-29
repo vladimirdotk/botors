@@ -1,0 +1,8 @@
+mongodb:
+  build: .
+  ports:
+    - "27017:27017"
+  volumes:
+    - ./data:/mongodata
+  command:
+    mongod --storageEngine wiredTiger --dbpath=/mongodata
