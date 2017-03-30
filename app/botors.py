@@ -50,7 +50,7 @@ def login():
 @login_required
 def add_note():
     json_request = request.get_json()
-    if json_request and set(NOTE_FIELDS).issubset(json_request.keys()):
+    if json_request and set(json_request.keys()).issubset(set(NOTE_FIELDS)):
         data = mongo.db.notes.insert_one(json_request)
         return jsonify({'id': data.inserted_id}), 201
 
