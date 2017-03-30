@@ -1,16 +1,32 @@
 import os
 import binascii
-from flask import Flask, request
+from flask import Flask, request, abort
 from flask_pymongo import PyMongo
-from flask_jwt_extended import JWTManager
 from flask_bcrypt import Bcrypt
 import config as config
 from response import jsonify
+from functools import wraps
 
 app = Flask(__name__)
 mongo = PyMongo(app)
-jwt = JWTManager(app)
 bcrypt = Bcrypt(app)
+
+NOTE_FIELDS = ['header', 'body']
+
+
+def login_required(fn):
+    """
+    Check auth decorator
+    :param callable fn: 
+    :return callable: 
+    """
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        token = request.headers.get('token')
+        if token and mongo.db.tokens.find_one({'token': token}):
+            return fn(*args, **kwargs)
+        abort(401)
+    return wrapper
 
 
 @app.route('/login', methods=['POST'])
@@ -28,6 +44,17 @@ def login():
             return jsonify({'token': get_new_token(user_data['_id'])}), 201
 
     return jsonify({'msg': 'Bad username or password!'}), 401
+
+
+@app.route('/notes', methods=['POST'])
+@login_required
+def add_note():
+    json_request = request.get_json()
+    if json_request and set(NOTE_FIELDS).issubset(json_request.keys()):
+        data = mongo.db.notes.insert_one(json_request)
+        return jsonify({'id': data.inserted_id}), 201
+
+    return jsonify({'msg': 'Bad request'}), 400
 
 
 def get_user_data(username):
@@ -63,6 +90,7 @@ def get_new_token(user_id):
     token = binascii.hexlify(os.urandom(24)).decode()
     mongo.db.tokens.insert_one({'user_id': user_id, 'token': token})
     return token
+
 
 if __name__ == '__main__':
     app.run(port=config.PORT, debug=config.DEBUG)
