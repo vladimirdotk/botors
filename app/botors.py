@@ -24,7 +24,7 @@ def login():
         username = json_request.get('username', None)
         password = json_request.get('password', None)
         user_data = get_user_data(username)
-        if check_password(username, password):
+        if user_data and check_password(username, password):
             return jsonify({'token': get_new_token(user_data['_id'])}), 201
 
     return jsonify({'msg': 'Bad username or password!'}), 401
