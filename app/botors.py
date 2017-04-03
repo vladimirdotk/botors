@@ -48,9 +48,26 @@ def login():
     return jsonify({'msg': 'Bad username or password!'}), 401
 
 
+@app.route('/notes', methods=['GET'])
+@login_required
+def get_notes():
+    """
+    Returns user notes
+    :return: 
+    """
+    data = mongo.db.notes.find({
+        'user_id': get_user_id_by_request(request)
+    }, {'user_id': 0})
+
+    if data.count() > 0:
+        return jsonify([document for document in data])
+
+    return jsonify({'msg': 'Not found'}), 404
+
+
 @app.route('/notes/<note_id>', methods=['GET'])
 @login_required
-def get_notes(note_id):
+def get_note(note_id):
     """
     Returns user's note
     :param str note_id: 
@@ -61,7 +78,10 @@ def get_notes(note_id):
         'user_id': get_user_id_by_request(request)
     }, {'user_id': 0})
 
-    return jsonify(data) if data else jsonify({'msg': 'Not found'}), 404
+    if data:
+        return jsonify(data)
+
+    return jsonify({'msg': 'Not found'}), 404
 
 
 @app.route('/notes', methods=['POST'])

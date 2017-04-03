@@ -3,6 +3,7 @@ import datetime
 from bson.objectid import ObjectId
 from flask import Response
 
+
 class MongoJsonEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (datetime.datetime, datetime.date)):
@@ -11,7 +12,14 @@ class MongoJsonEncoder(json.JSONEncoder):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
 
-def jsonify(*args, **kwargs):
-    """ jsonify with support for MongoDB ObjectId
-    """
-    return Response(json.dumps(dict(*args, **kwargs), cls=MongoJsonEncoder), mimetype='application/json')
+
+def jsonify(data):
+    return json_response(dumps(data))
+
+
+def dumps(data):
+    return json.dumps(data, cls=MongoJsonEncoder)
+
+
+def json_response(data):
+    return Response(data, mimetype='application/json')
