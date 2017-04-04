@@ -1,6 +1,6 @@
 import os
 import binascii
-from flask import Flask, request, abort
+from flask import Flask, request, redirect, abort
 from flask_pymongo import PyMongo
 from flask_bcrypt import Bcrypt
 import config as config
@@ -92,12 +92,37 @@ def add_note():
     :return: 
     """
     json_request = request.get_json()
-    if json_request and set(json_request.keys()).issubset(set(NOTE_FIELDS)):
+    if json_request and is_valid_note_fields(json_request.keys()):
         data = mongo.db.notes.insert_one({
             **json_request,
             **{'user_id': get_user_id_by_request(request)}
         })
         return jsonify({'_id': data.inserted_id}), 201
+
+    return jsonify({'msg': 'Bad request'}), 400
+
+
+@app.route('/notes/<note_id>', methods=['PUT'])
+@login_required
+def edit_note(note_id):
+    """
+    Edit note
+    :param str note_id: 
+    :return: 
+    """
+    json_request = request.get_json()
+    if json_request and is_valid_note_fields(json_request.keys()):
+        result = mongo.db.notes.update_one({
+            '_id': ObjectId(note_id),
+            'user_id': get_user_id_by_request(request)
+        }, {
+            '$set': json_request
+        }, upsert=False)
+
+        if result.matched_count > 0:
+            return redirect('/notes/{}'.format(note_id))
+        else:
+            return jsonify({'msg': 'Not found'}), 404
 
     return jsonify({'msg': 'Bad request'}), 400
 
@@ -168,6 +193,15 @@ def get_token_from_request(http_request):
     """
 
     return http_request.headers.get('token')
+
+
+def is_valid_note_fields(request_fields):
+    """
+    Validate note fields
+    :param list request_fields: 
+    :return: 
+    """
+    return set(request_fields).issubset(set(NOTE_FIELDS))
 
 
 if __name__ == '__main__':
