@@ -127,6 +127,26 @@ def edit_note(note_id):
     return jsonify({'msg': 'Bad request'}), 400
 
 
+@app.route('/notes/<note_id>', methods=['DELETE'])
+@login_required
+def delete_note(note_id):
+    """
+    Delete note
+    :param str note_id: 
+    :return: 
+    """
+
+    data = mongo.db.notes.delete_one({
+        '_id': ObjectId(note_id),
+        'user_id': get_user_id_by_request(request)
+    })
+
+    if data.deleted_count > 0:
+        return jsonify({}), 204
+
+    return jsonify({'msg': 'Bad request'}), 400
+
+
 def get_user_data(username):
     """
     Returns user's data
