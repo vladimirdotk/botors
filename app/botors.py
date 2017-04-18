@@ -147,6 +147,34 @@ def delete_note(note_id):
     return jsonify({'msg': 'Bad request'}), 400
 
 
+@app.route('/notes/search', methods=['POST'])
+@login_required
+def search_note():
+    """
+    Search notes
+    :return: 
+    """
+    search_data = request.get_json().get('text')
+
+    if search_data:
+        search_data_query = {
+            '$regex': search_data,
+            '$options': 'i'
+        }
+        result = mongo.db.notes.find({
+            '$or': [
+                {'header': search_data_query},
+                {'body': search_data_query}
+            ],
+            'user_id': get_user_id_by_request(request)
+        })
+
+        if result.count() > 0:
+            return jsonify([document for document in result])
+
+    return jsonify({'msg': 'Not found'}), 404
+
+
 def get_user_data(username):
     """
     Returns user's data
